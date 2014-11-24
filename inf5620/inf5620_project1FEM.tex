@@ -1,0 +1,262 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{parskip}
+\usepackage{amsmath, amssymb}
+
+\title{1D Wave equation with finite elements}
+\author{Yapi Donatien Achou}
+
+
+\begin{document}
+\maketitle
+
+\begin{description}
+\item[a)]
+
+We will construct a difference equation for all coefficients $c^{n+1}_j$, so we need to determine the initial values $c^0_j$. 
+The first thing we do is to find an expression for the residual at time step 0, ie. the measure of the error in fulfilling the governing equation. 
+The residual at time 0 is given by
+\begin{multline*}
+ R^0 = \mathcal{L} (u^0) = \mathcal{L} (\sum_j c_j^0 \psi_j^0 ), \text{ where } \\
+ \mathcal{L} (u) = u_{tt} -c^2 u_{xx} \text{ according to our problem model.}
+ \end{multline*}
+We will look at two principles for making R small: the Galerkin method and the collocation method. But first we find an expression for R:
+
+The initial conditions for $t = 0$ are given by 
+\begin{equation*}
+ u(x,0) = I(x) \text{ and } u_t(x,0) = V(x).
+ \end{equation*}
+
+Hence we can express 
+\begin{equation*}
+ u_{xx}^0 = I_{xx} (x) \text{ and } u_{tt}^0 = V_x(x)= 0.
+\end{equation*}
+
+Inserting these results into the expression for $R^0$ we have
+\[ R^0 =  -c^2 u_{xx}^0 = -c^2 I_{xx}  \]
+
+Hence we start using the Galerkin method: we seek ${c_i}$ such that $\langle R,v \rangle = 0$. We choose $v(x) = \phi_i (x)$. 
+Multiply by a function $v \in V$ and integrate on both sides, using integration by parts (the coefficient $c^2$ falls):
+\begin{equation*}
+ \int_0^L I_{xx} v \mathrm{d}x = 0 \qquad \to \qquad
+ - \int_0^L I_x v_x \mathrm{d}x = 0 
+\end{equation*}
+We seek a solution $u$ of the form
+\[ u(x, t^n) = U_0 (t_n) \phi_0 (x) + \sum_{j=0}^{N_n} c_j^n \phi_{j+1} (x) \]
+If we then let  $t_n = 0$, we have 
+\[ \underbrace{u(x, 0)}_{I(x)} = \underbrace{ U_0 (0) }_{I(0)} \phi_0 (x) + \sum_{j=0}^{N_n} c_j^0 \phi_{j+1} (x) \]
+Hence we can derivate the expression for $I_x(x)$ and insert it into our previous result, together with the chosen $v(x)$:
+\begin{align*}
+ I_x(x) = U_0 (0) \phi_0^{'} (x) + \sum_j c_j^0 \phi_{j+1}^{'} (x) \\ v_x(x) = \phi_i^{'} (x)\\ 
+ \Rightarrow \int_0^L \Big( U_0 (0) \phi_0^{'} (x) + \sum_j c_j^0 \phi_{j+1}^{'} (x) \Big) \phi_i^{'} (x) \mathrm{d}x = 0 \\
+ \Rightarrow \underbrace{ \int_0^L \phi_{j+1}^{'} (x) \phi_i^{'} (x) \mathrm{d}x }_{ A_{i,j}^0 } \underbrace{ \sum_{j=0}^{N_n} c_j^0 }_{c_j^0} 
+ = \underbrace{ - \int_0^L U_0 (0) \phi_0^{'} (x) \phi_i^{'} (x) \mathrm{d}x}_{ b_{i,j}^0} \\
+ \end{align*}
+We have thus derived a linear system to find $c_j^0$.
+
+If we instead use the collocation method, we must start choosing a set of $N+1$ collocation points uniformly distributed over 
+the interior of our domain: let $x_i = i \Delta x$, $\Delta x = L/N$, $i = 0,1,...,N-1$. We thus demand the residual to vanish at these points, 
+ie. we demand the error to be zero at a finite set of values. \newline
+The solution form 
+\[ u(x, 0) = I(x) = U_0 (0) \phi_0 (x) + \sum_{j=0}^{N_n} c_j^0 \phi_{j+1} (x)\]
+is directly plugged in the problem:
+\[ -\sum_j c_j^0 \phi_{j+1}^{''} (x) = I(0) \phi_0 (x) \]
+and the collocation procedure leads to the equations
+\begin{align*}
+ \underbrace{\phi_{j+1}^{''}(x_i)}_{A_{ij}} \underbrace{\sum_j c_j^0}_{c_j} = \underbrace{I(0) \phi_0 (x_i)}_{b_i} \text{,}
+\end{align*}
+Again we have obtained a set of equations to find $c_j^0$. 
+
+\vspace{1cm}
+
+\item[b)]
+The wave equation:
+\[ u_{tt} = c^2 u_{xx} \]
+We start deriving a finite difference approximation for the left side with respect to time:
+\[ u_{tt} \approx \frac{u^{n-1} - 2 u ^n + u^{n+1} }{ \Delta t^2 } \]
+Inserting this approximation into the equation, we can solve for the next time step: we have a formulation for the sequence of spacial problems
+given by
+\[ u^{n+1} (x) = \Delta t^2 c^2 u_{xx} ^n (x) - u^{n-1} (x) + 2 u ^n (x) \]
+The first time step must be considered as a special case since we do not have a value for $u^{-1}$. We use the discretized version of 
+the initial condition over the derivative of $u$ implying $\frac{\delta u}{\delta t}(x,0) = V(x)$:
+\[ \frac{u^{n-1} + u^{n+1}}{2 \Delta t} = V (x) \]
+and this gives
+\[ u^{n-1} = 2 \Delta t V (x) - u^{n+1}. \]
+Insert:
+\[ u^{n+1} = \Delta t^2 c^2 u_{xx}^n (x) - (2 \Delta t V - u^{n+1} (x) ) + 2 u^n (x) \]
+Hence the scheme for the first time step becomes 
+\[ u^1 = \frac{1}{2} \Delta t^2 c^2 u_{xx}^0 (x) + u^0 (x) - \Delta t V (x) \]
+ 
+\vspace{1cm}
+\item[c)]
+The first step is finite difference differentiation respect to time: 
+\[ \frac{ u^{n+1} -2u^n + u^{n-1} }{\Delta t^2} = c^2 u_{xx}^n \]
+Solving for $u^{n+1}$ we get
+\[ u^{n+1} = \Delta t^2 c^2 u_{xx}^n + 2 u^n - u^{n-1} \]
+The Galerkin method gives rise to the equation
+\begin{align*}
+ \int_0^L u^{n+1} v \mathrm{d} x = \Delta t^2 c^2 \underbrace{ \int_0^L u_{xx}^n v \mathrm{d} x }_{ = \lbrack v u_x \rbrack_0^L - \int v_x u_x = 
+ - \int v_x u_x } +  2 \int_0^L u^n v \mathrm{d} x - \int_0^L u^{n-1} v \mathrm{d} x \\
+ = - \Delta t^2 c^2 \int v_x u_x + 2 \int_0^L u^n v \mathrm{d} x - \int_0^L u^{n-1} v \mathrm{d} x \\
+\end{align*}
+This is equivalent to
+\begin{align*}
+\underbrace{ \langle u^{n+1},v \rangle}_{ a(u,v) } = \underbrace{ -\langle \Delta t^2 c^2 v_x, u_x^n \rangle + \langle 2 u^n, v \rangle -
+\langle u^{n-1}, v \rangle}_{L(v)}
+\end{align*}
+
+Thus our problem can be formulated in a variational form for general $u$ and $v$: \newline 
+\emph{Find u such that} $a(u,v) = L(v) \forall v \in V$, where
+\begin{align*}
+a(u,v) = \langle u^{n+1},v \rangle \qquad L(v) = -\langle \Delta t^2 c^2 v_x, u_x^n \rangle + \langle 2 u^n, v \rangle - \langle u^{n-1}, v \rangle
+\end{align*}
+
+\vspace{1cm}
+\item[d)]
+In order to derive the linear system that will find $c_j$ at each time step, we must express the time dependency through a finite 
+difference approximation:
+\[ u_{tt} \approx \frac{u^{n-1} - 2 u^n + u^{n+1}}{\Delta t^2} \]
+We let $t_n = n \Delta t$ and seek a finite element solution of the form \newline $u(x, t^n) = u^n (x) = \sum_{j=0}^{N_n} c_j^n \phi_j (x)$. 
+\newline Inserting the approximation into the problem, we  get an expression for $u^{n+1}$:
+\[ u^{n+1} = 2 u^n - u^{n-1} + \Delta t^2 c^2 u_{xx} \]
+Again we proceed with the Galerkin method: introduce a test function $v \in V = \mathrm{Span} \{ \phi_0, \phi_1, {\dots}, \phi_n \}$
+and integrate over the spacial mesh $[0, L]$:
+\begin{multline*}
+ \int_0^L u^{n+1} v \mathrm{d} x = 2 \int_0^L u^n v \mathrm{d} x - 
+ \int_0^L u^{n-1} v \mathrm{d} x + \Delta t^2 c^2 \int_0^L u^n_{xx} v \mathrm{d} x \\
+\text{using integration by parts:} \\
+= 2 \int_0^L u^n v \mathrm{d} x - \int_0^L u^{n-1} v \mathrm{d} x - \Delta t^2 c^2 \int_0^L u^n_x v_x \mathrm{d} x \\
+\text{Finally let $v (x) = \phi_i (x) $ and insert, together with the expression for $u^n (x)$: } \\
+\underbrace{ \int_0^L \phi_i \phi_j \mathrm{d} x}_{M_{i,j}} \sum c_j^{n+1} = \\ 2 \underbrace{ \int_0^L \phi_i \phi_j \mathrm{d} x }_{M_{i,j}} 
+\sum c_j^n - \underbrace{ \int_0^L \phi_i \phi_j \mathrm{d} x}_{M_{i,j}} \sum c_j^{n-1} - 
+\Delta t^2 c^2 \underbrace{ \int_0^L \phi_i^{'} \phi_j^{'} \mathrm{d} x }_{K_{i,j}} \sum c_j^n \\
+\end{multline*}
+
+We have thus derived the linear system to be solved for finding all $c_j^n$:
+\[ M c^{n+1} = 2M c^n - M c^{n-1} - \Delta t^2 c^2 K c^n\]
+
+\newpage 
+\item[e)]
+We assume further that we are using P1 elements. How will $M$ and $K$ look like? In general, we have from d) that
+\[ M_{i,j} = \int_{x_i}^{x_{i+1}} \phi_i \phi_j \mathrm{d} x \qquad K_{i,j} = \int_{x_i}^{x_{i+1}} \phi_i^{'} \phi_j^{'} \mathrm{d} x \]
+We also have that, on the reference element $[-1,1]$,
+\[ \phi_0(X) = 1/2 (1-X) \qquad \phi_1(X) = 1/2 (1+X) \]
+\[ \phi_0^{'}(X) = -1/2 \qquad \phi_{'} = 1/2 \]
+so
+\[ M_{i,j}^e = h/2 \int_{-1}^1 \phi_i \phi_j \mathrm{d} X \qquad K_{i,j}^e = h/2 \int_{-1}^{1} \phi_i^{'} \phi_j^{'} \mathrm{d} X \qquad i,j = 0,1 \]
+resulting in the matrices
+\begin{equation*}
+ M^e = \frac{h}{6}
+ \begin{bmatrix}
+  2 & 1\\
+  1 & 2
+ \end{bmatrix}
+ \qquad
+ K^e = \frac{h}{4}
+ \begin{bmatrix}
+  1 & -1\\
+  -1 & 1
+ \end{bmatrix}
+\end{equation*}
+Assembly to global matrices gives:
+\begin{equation*}
+ M = \frac{h}{6}
+ \begin{bmatrix}
+  2 & 1 \\
+  1 & 4 & 1 \\
+  & & \cdots \\
+  & & 1 & 4 & 1 \\
+  & & & 1 & 2 \\
+ \end{bmatrix}
+ \qquad
+ K = \frac{h}{4}
+ \begin{bmatrix}
+  1 & -1 \\
+  -1 & 2 & -1 \\
+  & & \cdots \\
+  & & -1 & 2 & -1 \\
+  & & & -1 & 1 \\
+ \end{bmatrix}
+\end{equation*}
+
+
+
+\item[f)]
+From d) and e) we have that a typical row in the matrix system
+\[ M c^{n+1} = 2M c^n - M c^{n-1} - \Delta t^2 c^2 K c^n\]
+can be written as 
+\begin{multline*}
+ \frac{h}{6} \Big( c_{i-1}^{n+1} + 4 c_{i}^{n+1} + c_{i+1}^{n+1} \Big) = \\
+ 2 \frac{h}{6} \Big( c_{i-1}^{n} + 4 c_{i}^{n} + c_{i+1}^{n} \Big) -
+ \frac{h}{6} \Big( c_{i-1}^{n-1} + 4 c_{i}^{n-1} + c_{i+1}^{n-1} \Big) - 
+ \Delta t^2 c^2 \frac{h}{4} \Big( - c_{i-1}^{n} + 2 c_{i}^{n} - c_{i+1}^{n} \Big)
+ \end{multline*}
+Since $u(x_j) = \sum_j c_ \phi (x_j) ) \sum_j c_j \delta_{ij} = c_j$, the unknowns $c_0,...,c_N$ are actually $u_1,...,u_{Nn}$.  
+Hence with a shift of indexes we can insert $u_i = c_{i-1}$ and we get
+\begin{multline*}
+ \frac{h}{6} \Big( u_{i-1}^{n+1} + 4 u_{i}^{n+1} + u_{i+1}^{n+1} \Big) = \\
+ 2 \frac{h}{6} \Big( u_{i-1}^{n} + 4 u_{i}^{n} + u_{i+1}^{n} \Big) -
+ \frac{h}{6} \Big( u_{i-1}^{n-1} + 4 u_{i}^{n-1} + u_{i+1}^{n-1} \Big) - 
+ \Delta t^2 c^2 \frac{h}{4} \Big( - u_{i-1}^{n} + 2 u_{i}^{n} - u_{i+1}^{n} \Big)
+ \end{multline*}
+ 
+Next we let $h = \Delta x$.\newline 
+In general, we have that
+\[ \lbrack D_t D_t u \rbrack_i^n = \frac{u_i^{n+1} - 2 u_i^n + u_i^{n-1}}{\Delta t^2} \qquad
+ \lbrack D_x D_x u \rbrack_i^n = \frac{u_{i+1}^{n} - 2 u_i^n + u_{i-1}^{n}}{\Delta x^2} \]
+so
+\[ \lbrack D_t D_t (D_x D_x u) \rbrack_i^n = \frac{\frac{u_{i+1}^{n+1} - 2 u_i^{n+1} + u_{i-1}^{n+1}}{\Delta x^2} 
+- 2 \frac{u_{i+1}^{n} - 2 u_i^n + u_{i-1}^{n}}{\Delta x^2} + \frac{u_{i+1}^{n-1} - 2 u_i^{n-1} + u_{i-1}^{n-1}}{\Delta x^2} }{\Delta t^2} \]
+
+Let us now try to reformulate our problem and achieve a compact operator description:
+\begin{multline*}
+ \frac{\Delta x}{6} \Big( u_{i-1}^{n+1} + 4 u_{i}^{n+1} + u_{i+1}^{n+1} \Big) = \\
+ 2 \frac{\Delta x}{6} \Big( u_{i-1}^{n} + 4 u_{i}^{n} + u_{i+1}^{n} \Big) -
+ \frac{\Delta x}{6} \Big( u_{i-1}^{n-1} + 4 u_{i}^{n-1} + u_{i+1}^{n-1} \Big) - 
+ \Delta t^2 c^2 \frac{\Delta x}{4} \Big( - u_{i-1}^{n} + 2 u_{i}^{n} - u_{i+1}^{n} \Big)\\
+ \Downarrow \\
+ \frac{\Delta x}{6} \Big( \Big( u_{i-1}^{n+1} + 4 u_{i}^{n+1} + u_{i+1}^{n+1} \Big) -
+ 2 \Big( u_{i-1}^{n} + 4 u_{i}^{n} + u_{i+1}^{n} \Big) +
+ \Big( u_{i-1}^{n-1} + 4 u_{i}^{n-1} + u_{i+1}^{n-1} \Big) \Big) = \\ 
+ \Delta t^2 c^2 \frac{\Delta x}{4} \Big( - u_{i-1}^{n} + 2 u_{i}^{n} - u_{i+1}^{n} \Big)\\
+\end{multline*}
+Subtracting $\Delta x(u_i^{n+1} - 2 u_i^n + u_i^{n-1})$ from both sides we get 
+\begin{multline*}
+ \frac{\Delta x}{6} \Big( ( u_{i-1}^{n+1} - 2 u_{i}^{n+1} + u_{i+1}^{n+1} ) -
+ 2 ( u_{i-1}^{n} - 2 u_{i}^{n} + u_{i+1}^{n} ) +
+( u_{i-1}^{n-1} - 2 u_{i}^{n-1} + u_{i+1}^{n-1} ) \Big) = \\ 
+ \Delta t^2 c^2 \frac{\Delta x}{4} \Big( - u_{i-1}^{n} + 2 u_{i}^{n} - u_{i+1}^{n} \Big) - \Delta x \Big( u_i^{n+1} - 2 u_i^n + u_i^{n-1} \Big)\\
+\\
+ \Updownarrow \\
+ \\
+ \frac{ \frac{\Delta x}{6} \Big( ( u_{i-1}^{n+1} - 2 u_{i}^{n+1} + u_{i+1}^{n+1} ) -
+ 2 ( u_{i-1}^{n} - 2 u_{i}^{n} + u_{i+1}^{n} ) +
+( u_{i-1}^{n-1} - 2 u_{i}^{n-1} + u_{i+1}^{n-1} ) \Big) }{\Delta t^2} = \\ 
+ c^2 \frac{\Delta x}{4} \Big( - u_{i-1}^{n} + 2 u_{i}^{n} - u_{i+1}^{n} \Big) - \frac{\Delta x}{\Delta t^2} \Big( u_i^{n+1} - 2 u_i^n + u_i^{n-1} \Big)\\ 
+\\
+ \Updownarrow \\
+\\
+\frac{1}{6} \frac { \Big( ( \frac{u_{i-1}^{n+1} - 2 u_{i}^{n+1} + u_{i+1}^{n+1}}{\Delta x^2} ) -
+ 2 ( \frac{u_{i-1}^{n} - 2 u_{i}^{n} + u_{i+1}^{n}}{\Delta x^2} ) +
+( \frac{ u_{i-1}^{n-1} - 2 u_{i}^{n-1} + u_{i+1}^{n-1}}{\Delta x^2} ) \Big) }{\Delta t^2} = \\ 
+ c^2 \frac{1}{4} \Big( \frac{- u_{i-1}^{n} + 2 u_{i}^{n} - u_{i+1}^{n}}{\Delta x^2} \Big) - \frac{1}{\Delta x^2} 
+ \Big( \frac{ u_i^{n+1} - 2 u_i^n + u_i^{n-1}}{\Delta t^2} \Big)\\ 
+\end{multline*}
+Here we can recognize finite differences of second order in time and space $\lbrack D_t D_t u \rbrack_i^n$ and $\lbrack D_x D_x u \rbrack_i^n$:
+\begin{align*}
+\frac{1}{6} \lbrack D_t D_t (D_x D_x u) \rbrack_i^n = c^2 \frac{1}{4} \lbrack D_x D_x u \rbrack_i^n - 
+\frac{1}{\Delta x^2} \lbrack D_t D_t u \rbrack_i^n
+\end{align*}
+or equivalently,
+\begin{align*}
+\lbrack D_t D_t (u + \frac{1}{6} \Delta x^2 D_x D_x u) = c^2 \Delta x^2 /4 D_x D_x u \rbrack_i^n
+\end{align*}
+
+We have thus seen that the 1D wave equation $u_{tt} = c^2 u_{xx}$ can be solved with finite elements adjusted to have a finite difference behaviour. 
+More simply, we manage to avoid solving a system of equations for each time step, and use an iterative method instead: 
+this is preferable since system solving is time consuming and memory demanding. \newline 
+The adjusted finite element method will still not be as good as the finite difference method because of a coefficient $\Delta x^2 /4$ which will have
+a slowing effect on the method.
+\end{description}
+
+\end{document}          

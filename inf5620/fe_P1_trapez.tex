@@ -1,0 +1,132 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb}
+\usepackage{parskip}
+
+\title{Exercise 19\\The Trapezoidal rule and P1 elements}
+\author{Yapi Donatien Achou}
+
+\begin{document}
+\maketitle
+We consider the approximation of a general function $f(x) $ on a general domain $\Omega$ with the least squares method. 
+We will work on the reference element $[-1,1]$ and map the element domain $[x_i , x_{i+1}]$ to this domain, 
+for the global variable $i=0,1,...,N-1$.
+
+Hence we define $X \in [-1,1]$ to be the coordinate in the reference element, 
+and we use the affine mapping from the subdomain $\Omega^{(i)}$ to be
+\[
+ x = x_m + \frac{h}{2} X 
+\] 
+where $x_m = \frac{x_i + x_{i+1}}{2}$ and $h = x_{i+1} - x_i$. \newline
+The stretch factor $\delta x/\delta X$ between $x$ and $X$ coordinates is the determinant of the Jacobi matrix and 
+in 1D is equal to $h/2$.\newline
+
+The Trapezoidal rule is used to compute the integrals. 
+On the reference element we thus get the approximation
+\[
+ \int_{-1}^1 g(X) dX \approx g(-1) +g(1)
+\]
+for a generic function $g(x)$.
+
+We will work with P1 elements, ie. Lagrange polynomial basis functions of degree 1,
+so the basis functions are given by $\phi_0 = \frac{1}{2}(1-X)$ and $\phi_1 = \frac{1}{2}(1+X)$.\newline
+\newline We want to show that the linear system resulting from the least squares method 
+is equal to a linear system with entries $c_i = f(x_i)$
+when the Trapezoidal rule is used in the integral approximation together with P1 elements.\newline
+
+We start deriving the element matrix $A_{r,s}^{(e)}$ and the element vector $b_r^{(e)}$, 
+where $r$ and $s$ are the local element variables and $r,s = 0, 1$ since we are working with P1 elements. 
+Then we will assemble all local contributions and derive the global matrix $A_{i,j}$ and the global vector $b_i$.\newline
+
+In general,
+\begin{align*}
+ A_{r,s}^{(e)} &= \int_{-1}^{1} \phi_r(X) \phi_s(X) \frac{\delta x}{\delta X} \delta X \\
+ &= \int_{-1}^{1} \phi_r(X) \phi_s(X) \frac{h}{2} \delta X \\
+ &\approx \frac{h}{2} [ \phi_r(-1) \phi_s(-1) + \phi_r(1) \phi_s(1) ] \\
+ \\ 
+ b_r^{(e)} &= \int_{-1}^{1} \phi_r(X) f(x(X)) \frac{\delta x}{\delta X} \delta X \\
+ &= \frac{h}{2} \int_{-1}^{1} \phi_r(X) f( \frac{1}{2} (x_i - x_{i+1}) + \frac{h}{2} X) \delta X \\
+ &\approx \frac{h}{2} [ \phi_r(-1) f( \frac{1}{2} (x_i - x_{i+1}) - \frac{h}{2}) + \phi_r(1) f(\frac{1}{2} (x_i - x_{i+1}) + \frac{h}{2} ) ] \\ 
+ \end{align*}
+ 
+Hence we get
+\begin{align*}
+ A_{0,0}^{(e)} &= \frac{h}{2} [ \phi_0(-1) \phi_0(-1) + \phi_1(1) \phi_1(1) ] \\
+ &= \frac{h}{2} \\
+ A_{1,0}^{(e)} &= \frac{h}{2} [ \phi_0(-1) \phi_1(-1) + \phi_0(1) \phi_1(1) ] \\
+ &= 0 = A_{0,1}^{(e)} \\
+ A_{1,1}^{(e)} &= \frac{h}{2} [ \phi_1(-1) \phi_1(-1) + \phi_1(1) \phi_1(1) ] \\
+ &= \frac{h}{2} \\
+ b_0 &= \frac{h}{2} [ \phi_0(-1) f( \frac{1}{2} (x_i - x_{i+1}) - \frac{h}{2}) + \phi_0(1) f(\frac{1}{2} (x_i - x_{i+1}) + \frac{h}{2} ) ] \\
+ &= \frac{h}{2} f(x_i) \\
+ b_1 &= \frac{h}{2} [ \phi_1(-1) f( \frac{1}{2} (x_i - x_{i+1}) - \frac{h}{2}) + \phi_1(1) f(\frac{1}{2} (x_i - x_{i+1}) + \frac{h}{2} ) ] \\
+ &= \frac{h}{2} f(x_{i+1}) \\
+ \end{align*}
+
+hence for every element:
+ \begin{align*}
+ A^{(e)} = \frac{h}{2} \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} \\
+ \\
+ b^{(e)} = \frac{h}{2} \begin{bmatrix} f(x_i) \\ f(x_{i+1}) \end{bmatrix} \\
+ \\
+ \end{align*}
+and all together, using that \newline
+$A_{i,j} = \sum_e A_{i,j}^{(e)}$ and $b_i = \sum_e b_i^{(e)}$:
+
+ \begin{align*}
+ A = \frac{h}{2} 
+ \begin{bmatrix}
+ \frac{h}{2}\\ 
+ & h\\
+ & & h\\
+ & & \cdots\\
+ & & & h\\
+ & & & & h\\
+ & & & & & \frac{h}{2} \\
+ \end{bmatrix} \\
+\\
+b = \frac{h}{2} 
+ \begin{bmatrix}
+ \frac{h}{2} f(x_0) \\ 
+ h f(x_1) \\
+ \cdot \\ \cdot \\ \cdot \\ 
+ h f(x_{n-1}) \\ 
+ \frac{h}{2} f(x_n) 
+ \end{bmatrix} \\
+\end{align*}
+
+The linear system $Ac = b$ can be solved directly since A is tridiagonal:
+\begin{align*}
+ c &= A^{-1}b &= 
+ \begin{bmatrix}
+ \frac{2}{h}\\ 
+ & \frac{1}{h}\\
+ & & \frac{1}{h}\\
+ & & \cdots\\
+ & & & \frac{1}{h} \\
+ & & & & \frac{1}{h} \\
+ & & & & & \frac{2}{h} \\
+ \end{bmatrix}
+ \begin{bmatrix}
+ \frac{h}{2} f(x_0) \\ 
+ h f(x_1) \\
+ \cdot \\ \cdot \\ \cdot \\ 
+ h f(x_{n-1}) \\ 
+ \frac{h}{2} f(x_n) \\
+ \end{bmatrix}\\
+ \text{so } c_i = f(x_i) \text{, as we wanted to show because:}
+\end{align*}
+
+\begin{equation}
+f(x_{i}) =  
+ \begin{bmatrix}
+ f(x_0) \\ 
+ f(x_1) \\
+ \cdot \\ \cdot \\ \cdot \\ 
+  f(x_{n-1}) \\ 
+  f(x_n) 
+ \end{bmatrix} \\
+\end{equation}
+
+
+\end{document}          
